@@ -12,11 +12,6 @@ app.use(express.json())
 const AGENT_TOKEN =
   process.env.SECURE_TOKEN ||
   "JPayZIfQHEmhaQzpDfhOld73Q7GFrcxdLwalPus88taEJqfTU3aeHO02gAOeayHf"
-const AGENT_BASE_URL =
-  process.env.AGENT_PUBLIC_URL ||
-  process.env.AGENT_BASE_URL ||
-  "http://localhost:8000"
-const CPU_THRESHOLD = 85.0
 
 const WHATSAPP_PHONE = process.env.WHATSAPP_PHONE
 const WHATSAPP_API_KEY = process.env.WHATSAPP_API_KEY
@@ -52,7 +47,7 @@ const sendAlert = async (message: string) => {
 app.post("/api/metrics", authMiddleware, async (req, res) => {
   const { system, containers } = req.body
 
-  if (system.cpu > CPU_THRESHOLD) {
+  if (system.cpu > 85.0) {
     await sendAlert(`⚠️ *CRITICAL:* CPU Usage at ${system.cpu}%`)
   }
 
@@ -68,12 +63,22 @@ app.post("/api/metrics", authMiddleware, async (req, res) => {
 
 app.get("/api/containers", clientAuthMiddleware, async (req, res) => {
   try {
-    const response = await axios.get(`${AGENT_BASE_URL}/containers`, {
+    const targetHost = req.headers["x-target-host"] as string
+    const sshUser = (req.headers["x-ssh-user"] as string) || "root"
+
+    if (!targetHost) {
+      return res.status(400).json({ error: "Target host header missing" })
+    }
+
+    const dynamicAgentUrl = `http://${targetHost}:8000`
+    const response = await axios.get(`${dynamicAgentUrl}/containers`, {
       headers: { Authorization: `Bearer ${AGENT_TOKEN}` }
     })
     res.json(response.data)
   } catch (error) {
-    res.status(500).json({ error: "Failed to fetch containers from agent" })
+    res
+      .status(500)
+      .json({ error: "Failed to fetch containers from target host" })
   }
 })
 
@@ -83,8 +88,17 @@ app.post(
   async (req, res) => {
     try {
       const containerId = req.params.id
+      const targetHost = req.body.host
+
+      if (!targetHost) {
+        return res
+          .status(400)
+          .json({ error: "Target host missing in request body" })
+      }
+
+      const dynamicAgentUrl = `http://${targetHost}:8000`
       const response = await axios.post(
-        `${AGENT_BASE_URL}/containers/${containerId}/restart`,
+        `${dynamicAgentUrl}/containers/${containerId}/restart`,
         {},
         {
           headers: { Authorization: `Bearer ${AGENT_TOKEN}` }
@@ -92,7 +106,9 @@ app.post(
       )
       res.json(response.data)
     } catch (error) {
-      res.status(500).json({ error: "Failed to restart container" })
+      res
+        .status(500)
+        .json({ error: "Failed to restart container on target host" })
     }
   }
 )
