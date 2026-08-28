@@ -12,7 +12,10 @@ app.use(express.json())
 const AGENT_TOKEN =
   process.env.SECURE_TOKEN ||
   "JPayZIfQHEmhaQzpDfhOld73Q7GFrcxdLwalPus88taEJqfTU3aeHO02gAOeayHf"
-const AGENT_BASE_URL = process.env.AGENT_BASE_URL || "http://localhost:8000"
+const AGENT_BASE_URL =
+  process.env.AGENT_PUBLIC_URL ||
+  process.env.AGENT_BASE_URL ||
+  "http://localhost:8000"
 const CPU_THRESHOLD = 85.0
 
 const WHATSAPP_PHONE = process.env.WHATSAPP_PHONE
@@ -95,6 +98,3 @@ app.post(
 )
 
 app.listen(3000, () => console.log("Backend running on port 3000"))
-
-// set SECURE_TOKEN=JPayZIfQHEmhaQzpDfhOld73Q7GFrcxdLwalPus88taEJqfTU3aeHO02gAOeayHf
-// npx ts-node server.ts
