@@ -3,6 +3,8 @@
   "version": "1.0.0",
   "main": "server.ts",
   "scripts": {
+    "build": "npx tsc",
+    "start": "node server.js",
     "dev": "ts-node server.ts"
   },
   "dependencies": {
