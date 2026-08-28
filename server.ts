@@ -64,13 +64,13 @@ app.post("/api/metrics", authMiddleware, async (req, res) => {
 app.get("/api/containers", clientAuthMiddleware, async (req, res) => {
   try {
     const targetHost = req.headers["x-target-host"] as string
-    const sshUser = (req.headers["x-ssh-user"] as string) || "root"
-
     if (!targetHost) {
       return res.status(400).json({ error: "Target host header missing" })
     }
 
-    const dynamicAgentUrl = `http://${targetHost}:8000`
+    const protocol = targetHost.includes("ngrok-free.dev") ? "https" : "http"
+    const dynamicAgentUrl = `${protocol}://${targetHost}${targetHost.includes("ngrok") ? "" : ":8000"}`
+
     const response = await axios.get(`${dynamicAgentUrl}/containers`, {
       headers: { Authorization: `Bearer ${AGENT_TOKEN}` }
     })
