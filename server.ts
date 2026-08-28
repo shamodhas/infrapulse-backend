@@ -133,20 +133,9 @@ app.get(
   clientAuthMiddleware,
   async (req: express.Request, res: express.Response): Promise<any> => {
     try {
-      const targetHostHeader = req.headers["x-target-host"]
-      const targetHost = Array.isArray(targetHostHeader)
-        ? targetHostHeader[0]
-        : targetHostHeader
-
-      const sshUserHeader = req.headers["x-ssh-user"]
-      const sshUser =
-        (Array.isArray(sshUserHeader) ? sshUserHeader[0] : sshUserHeader) ||
-        "root"
-
-      const sshSecretHeader = req.headers["x-ssh-secret"]
-      const sshSecret = Array.isArray(sshSecretHeader)
-        ? sshSecretHeader[0]
-        : sshSecretHeader
+      const targetHost: string = String(req.headers["x-target-host"] || "")
+      const sshUser: string = String(req.headers["x-ssh-user"] || "root")
+      const sshSecret: string = String(req.headers["x-ssh-secret"] || "")
 
       if (!targetHost || !sshSecret) {
         return res
@@ -169,12 +158,12 @@ app.post(
   clientAuthMiddleware,
   async (req: express.Request, res: express.Response): Promise<any> => {
     try {
-      const containerId = req.params.id
+      const containerId:any = req.params.id
       const { host, sshUser, sshSecret } = req.body
 
-      const targetHost = Array.isArray(host) ? host[0] : host
-      const username = (Array.isArray(sshUser) ? sshUser[0] : sshUser) || "root"
-      const secret = Array.isArray(sshSecret) ? sshSecret[0] : sshSecret
+      const targetHost: string = String(host || "")
+      const username: string = String(sshUser || "root")
+      const secret: string = String(sshSecret || "")
 
       if (!targetHost || !secret) {
         return res
