@@ -44,6 +44,12 @@ const sendAlert = async (message: string) => {
   await axios.get(url).catch(() => {})
 }
 
+app.get("/api/health", (req, res) => {
+  res
+    .status(200)
+    .json({ status: "healthy", timestamp: new Date().toISOString() })
+})
+
 app.post("/api/metrics", authMiddleware, async (req, res) => {
   const { system, containers } = req.body
 
@@ -68,8 +74,10 @@ app.get("/api/containers", clientAuthMiddleware, async (req, res) => {
       return res.status(400).json({ error: "Target host header missing" })
     }
 
-    const protocol = targetHost.includes("ngrok-free.dev") ? "https" : "http"
-    const dynamicAgentUrl = `${protocol}://${targetHost}${targetHost.includes("ngrok") ? "" : ":8000"}`
+    const protocol = targetHost.includes("ngrok") ? "https" : "http"
+    const dynamicAgentUrl = targetHost.includes("ngrok")
+      ? `${protocol}://${targetHost}`
+      : `${protocol}://${targetHost}:8000`
 
     const response = await axios.get(`${dynamicAgentUrl}/containers`, {
       headers: { Authorization: `Bearer ${AGENT_TOKEN}` }
@@ -96,7 +104,11 @@ app.post(
           .json({ error: "Target host missing in request body" })
       }
 
-      const dynamicAgentUrl = `http://${targetHost}:8000`
+      const protocol = targetHost.includes("ngrok") ? "https" : "http"
+      const dynamicAgentUrl = targetHost.includes("ngrok")
+        ? `${protocol}://${targetHost}`
+        : `${protocol}://${targetHost}:8000`
+
       const response = await axios.post(
         `${dynamicAgentUrl}/containers/${containerId}/restart`,
         {},
