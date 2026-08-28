@@ -172,10 +172,11 @@ app.post(
       const containerId = req.params.id
       const { host, sshUser, sshSecret } = req.body
 
-      const targetHost = host
-      const username = sshUser || "root"
+      const targetHost = Array.isArray(host) ? host[0] : host
+      const username = (Array.isArray(sshUser) ? sshUser[0] : sshUser) || "root"
+      const secret = Array.isArray(sshSecret) ? sshSecret[0] : sshSecret
 
-      if (!targetHost || !sshSecret) {
+      if (!targetHost || !secret) {
         return res
           .status(400)
           .json({
@@ -186,7 +187,7 @@ app.post(
       const result = await restartRemoteSSH(
         targetHost,
         username,
-        sshSecret,
+        secret,
         containerId
       )
       return res.json(result)
