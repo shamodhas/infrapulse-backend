@@ -74,13 +74,16 @@ app.get("/api/containers", clientAuthMiddleware, async (req, res) => {
       return res.status(400).json({ error: "Target host header missing" })
     }
 
+    const authHeader = req.headers.authorization
+    const clientToken = authHeader?.split(" ")[1]
+
     const protocol = targetHost.includes("ngrok") ? "https" : "http"
     const dynamicAgentUrl = targetHost.includes("ngrok")
       ? `${protocol}://${targetHost}`
       : `${protocol}://${targetHost}:8000`
 
     const response = await axios.get(`${dynamicAgentUrl}/containers`, {
-      headers: { Authorization: `Bearer ${AGENT_TOKEN}` }
+      headers: { Authorization: `Bearer ${clientToken}` }
     })
     res.json(response.data)
   } catch (error) {
@@ -104,6 +107,9 @@ app.post(
           .json({ error: "Target host missing in request body" })
       }
 
+      const authHeader = req.headers.authorization
+      const clientToken = authHeader?.split(" ")[1]
+
       const protocol = targetHost.includes("ngrok") ? "https" : "http"
       const dynamicAgentUrl = targetHost.includes("ngrok")
         ? `${protocol}://${targetHost}`
@@ -113,7 +119,7 @@ app.post(
         `${dynamicAgentUrl}/containers/${containerId}/restart`,
         {},
         {
-          headers: { Authorization: `Bearer ${AGENT_TOKEN}` }
+          headers: { Authorization: `Bearer ${clientToken}` }
         }
       )
       res.json(response.data)
